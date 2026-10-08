@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What do you have for breakfast?</title>
+<style>
+:root{
+  --bg:#f1f5f3; --surface:#ffffff; --ink:#1c2924; --muted:#566860; --line:#d2dcd7;
+  --basil:#2b7a4a; --basil-soft:#ddf0e4; --on-basil:#ffffff;
+  --tomato:#cf3f27; --tomato-soft:#fbe2dc;
+  --lemon:#f1c232; --lemon-soft:#fff4cc; --on-lemon:#2b2200;
+  --pan:#22302a; --on-pan:#f1f5f3;
+  --head:'Avenir Next','Trebuchet MS','Segoe UI',system-ui,sans-serif;
+  --body:system-ui,'Segoe UI',Verdana,Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131a17; --surface:#1d2723; --ink:#e9f0ec; --muted:#9db1a8; --line:#33433c;
+    --basil:#5cbe84; --basil-soft:#1d3a2a; --on-basil:#08150d;
+    --tomato:#ff7b66; --tomato-soft:#3c211c;
+    --lemon:#f1c232; --lemon-soft:#38321a; --on-lemon:#2b2200;
+    --pan:#0d1310; --on-pan:#e9f0ec;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131a17; --surface:#1d2723; --ink:#e9f0ec; --muted:#9db1a8; --line:#33433c;
+  --basil:#5cbe84; --basil-soft:#1d3a2a; --on-basil:#08150d;
+  --tomato:#ff7b66; --tomato-soft:#3c211c;
+  --lemon:#f1c232; --lemon-soft:#38321a; --on-lemon:#2b2200;
+  --pan:#0d1310; --on-pan:#e9f0ec;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 5rem)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:1.125rem;line-height:1.5}
+h1,h2,h3{font-family:var(--head)}
+button,select,textarea,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--tomato);outline-offset:2px}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--pan);color:var(--on-pan);display:flex;flex-wrap:wrap;gap:.6rem 1.5rem;align-items:center;justify-content:space-between;padding:.7rem 1rem}
+.top h1{margin:0;font-size:1.3rem;line-height:1.2;font-weight:800}
+.top p{margin:0;font-size:.9rem;opacity:.8}
+.score{min-width:12rem;text-align:right}
+.score strong{font-family:var(--head);font-size:1.7rem;font-weight:800;color:var(--lemon)}
+.score span{font-size:.95rem}
+.bar{height:.5rem;background:rgba(255,255,255,.22);border-radius:99px;overflow:hidden;margin-top:.2rem}
+.bar i{display:block;height:100%;width:0;background:var(--lemon);transition:width .3s}
+
+.tabs{display:flex;gap:.4rem;overflow-x:auto;padding:.6rem 1rem;background:var(--surface);border-bottom:1px solid var(--line)}
+.tab{flex:none;display:flex;align-items:center;gap:.4rem;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:.4rem .85rem;cursor:pointer;font-size:.95rem}
+.tab .n{font-weight:700}
+.tab[aria-current="page"]{background:var(--basil);border-color:var(--basil);color:var(--on-basil)}
+.tchip{font-size:.8rem;font-weight:700;background:var(--lemon);color:var(--on-lemon);border-radius:99px;padding:0 .45rem}
+.tchip:empty{display:none}
+
+main{max-width:60rem;margin:0 auto;padding:1.1rem 1rem 3.5rem}
+.panel[hidden]{display:none}
+.panel h3{font-size:1.3rem;margin:1.6rem 0 .3rem;line-height:1.2}
+.sub{color:var(--muted);margin:0 0 .8rem}
+.no{font-style:italic;color:var(--muted)}
+
+.ticket{background:var(--lemon-soft);border:1px solid var(--lemon);border-radius:10px;margin:0 0 1.3rem;overflow:hidden}
+.ticket-head{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;gap:.1rem .9rem;padding:.9rem 1.1rem .75rem;border-bottom:2px dashed var(--lemon)}
+.ticket-head::before,.ticket-head::after{content:"";position:absolute;bottom:-.7rem;width:1.3rem;height:1.3rem;border-radius:50%;background:var(--bg);border:1px solid var(--lemon)}
+.ticket-head::before{left:-.75rem}
+.ticket-head::after{right:-.75rem}
+.ticket-head h2{margin:0;font-size:1.5rem;line-height:1.15;font-weight:800}
+.ticket-head .no{margin:0}
+.time{margin-left:auto;font-weight:700;font-size:.9rem;background:var(--lemon);color:var(--on-lemon);border-radius:99px;padding:.05rem .65rem}
+.ticket-body{padding:.8rem 1.1rem 1rem}
+.ticket-body p{margin:.3rem 0}
+.tag{display:inline-block;font-size:.75rem;font-weight:700;background:var(--pan);color:var(--on-pan);border-radius:4px;padding:0 .35rem;margin-right:.5rem;vertical-align:.1em}
+.tag.nb{background:var(--lemon);color:var(--on-lemon)}
+
+.btn{background:var(--basil);color:var(--on-basil);border:0;border-radius:8px;padding:.6rem 1.1rem;min-height:2.75rem;font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-top:.8rem}
+.toggle{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;margin:0 0 .8rem}
+.toggle input{width:1.2rem;height:1.2rem}
+.msg{min-height:1.6rem;margin:.5rem 0;font-weight:700}
+.msg.good{color:var(--basil)}
+.msg.bad{color:var(--tomato)}
+
+.bank{display:flex;flex-wrap:wrap;gap:.5rem;padding:.8rem;background:var(--surface);border:1px dashed var(--line);border-radius:12px;min-height:3.6rem}
+.chip{display:inline-flex;flex-direction:column;align-items:center;min-width:5.6rem;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:.35rem .7rem;cursor:pointer}
+.chip .emo{font-size:1.5rem;line-height:1.1}
+.chip .w{font-weight:700}
+.chip .wno{display:none;font-size:.85rem;color:var(--muted)}
+.show-no .chip .wno{display:block}
+.chip.sel{border-color:var(--basil);background:var(--basil-soft)}
+.chip.small{flex-direction:row;min-width:0;font-weight:700}
+.chip.ok{border-color:var(--basil);background:var(--basil-soft)}
+.chip:disabled{cursor:default;color:var(--ink)}
+.chip.placed{min-width:0;padding:.2rem .5rem;pointer-events:none;cursor:default}
+.chip.placed .emo{font-size:1.1rem}
+
+.buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.8rem;margin-top:1rem}
+.bucket{background:var(--surface);border:2px solid var(--line);border-top-width:7px;border-radius:12px;padding:.6rem .8rem .8rem;min-height:9rem;cursor:pointer}
+.bucket:hover{border-color:var(--basil)}
+.bucket[data-g="fruit"]{border-top-color:var(--tomato)}
+.bucket[data-g="veg"]{border-top-color:var(--basil)}
+.bucket[data-g="adj"]{border-top-color:var(--lemon)}
+.bucket[data-g="meal"]{border-top-color:var(--pan)}
+.bucket h4{margin:0 0 .5rem;font-family:var(--head);font-size:1.1rem}
+.bucket h4 .no{display:block;font-weight:400;font-size:.9rem}
+.list{display:flex;flex-wrap:wrap;gap:.35rem}
+
+.listen{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem}
+.speaker{font-size:1.4rem;padding:.8rem 1.4rem}
+.big-emo{font-size:3.5rem;line-height:1.1}
+.opts{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+.opt{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:.5rem 1rem;min-height:2.9rem;font-weight:700;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--basil)}
+.opt.ok{background:var(--basil-soft);border-color:var(--basil)}
+.opt.bad{background:var(--tomato-soft);border-color:var(--tomato);opacity:.85}
+.opt.dim{opacity:.45}
+.opt:disabled{cursor:default}
+
+.rule{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.rule>div{border-radius:12px;padding:.8rem 1rem}
+.rule .have{background:var(--basil-soft);border:2px solid var(--basil)}
+.rule .has{background:var(--tomato-soft);border:2px solid var(--tomato)}
+.rule .word{font-family:var(--head);font-size:2rem;font-weight:800;margin:0;line-height:1.1}
+.rule ul{list-style:none;margin:.4rem 0 0;padding:0}
+.ex{margin:.8rem 0 0;padding:.7rem 1rem;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.ex p{margin:.15rem 0}
+.stand{background:var(--surface);border:2px solid var(--lemon);border-radius:12px;padding:.8rem 1rem}
+.stand .prompt{font-weight:700;font-size:1.25rem;margin:.2rem 0}
+
+.spellrow{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1rem;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.6rem .9rem;margin:.6rem 0}
+.spellrow .pic{font-size:2rem;line-height:1}
+.spellrow .hint{min-width:7rem;font-weight:700}
+.letters{display:flex;gap:.25rem;align-items:center}
+.letter{font-weight:800;font-size:1.6rem;width:1.4rem;text-align:center}
+.gap{width:2.3rem;height:2.8rem;text-align:center;font-size:1.5rem;font-weight:800;padding:0;border-radius:8px;border:2px solid var(--ink);background:var(--bg);text-transform:lowercase}
+.gap.bad{border-color:var(--tomato);background:var(--tomato-soft)}
+.gap.ok{border-color:var(--basil);background:var(--basil-soft)}
+.spellrow .msg{margin:0;min-height:0;flex-basis:100%}
+.teens{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:.8rem}
+.teen{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem 1rem}
+.teen-head{display:flex;gap:.8rem;align-items:center;margin-bottom:.4rem}
+.teen-head h4{margin:0;font-family:var(--head);font-size:1.3rem;line-height:1.1}
+.teen-head .sub{margin:0;font-size:.95rem}
+.avatar{flex:none;width:3rem;height:3rem;border-radius:50%;border:4px solid var(--basil);background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:var(--head);font-weight:800;font-size:1.4rem}
+.teen p.line1{margin:.25rem 0}
+.help{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.6rem 1rem;margin-bottom:1rem}
+.help summary{cursor:pointer;font-weight:700}
+.helpgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:.2rem 1rem;margin-top:.6rem}
+.mc{padding:.8rem 0;border-bottom:1px solid var(--line)}
+.qtext{font-weight:700;margin-bottom:.4rem}
+.bubble{display:inline-block;background:var(--lemon-soft);border:1px solid var(--lemon);border-radius:14px;padding:.4rem .9rem;margin-bottom:.4rem}
+
+.dlg{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem}
+.line{display:flex;gap:.6rem;margin:.35rem 0;align-items:flex-start}
+.line b{flex:none;width:3.4rem;padding-top:.4rem}
+.line .talk{border-radius:12px;padding:.35rem .8rem}
+.line.mia .talk{background:var(--basil-soft)}
+.line.omar .talk{background:var(--lemon-soft)}
+
+.matchgrid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.col{display:flex;flex-direction:column;gap:.5rem}
+.card{text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:.5rem .8rem;cursor:pointer}
+.card.sel{border-color:var(--basil);background:var(--basil-soft)}
+.card.ok{border-color:var(--basil);background:var(--basil-soft);opacity:.75}
+.card:disabled{cursor:default;color:var(--ink)}
+
+.build{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem;margin:.8rem 0}
+.build .nbprompt{margin:0 0 .4rem;font-weight:700}
+.ansline{display:flex;flex-wrap:wrap;gap:.4rem;min-height:3.2rem;padding:.5rem;border-bottom:3px solid var(--ink);margin-bottom:.6rem}
+.build .bank{border:0;padding:.3rem 0;background:none;min-height:2.6rem}
+
+.field{display:block;margin:.8rem 0}
+.field span{display:block;font-weight:700;margin-bottom:.2rem}
+select,textarea{width:100%;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:.5rem .7rem}
+textarea{min-height:6rem;resize:vertical}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:0 1rem}
+.menu{background:var(--surface);border:2px dashed var(--ink);border-radius:10px;padding:.8rem 1.2rem;margin:.8rem 0}
+.menu p{margin:.2rem 0;font-size:1.2rem}
+.check{display:flex;gap:.6rem;align-items:flex-start;margin:.4rem 0}
+.check input{width:1.3rem;height:1.3rem;margin-top:.2rem;flex:none}
+
+.result{background:var(--basil-soft);border:2px solid var(--basil);border-radius:12px;padding:1rem 1.2rem;margin-top:1.2rem}
+.result .big{font-family:var(--head);font-size:2rem;font-weight:800;margin:0;line-height:1.1}
+.result p{margin:.3rem 0}
+
+.board{background:var(--surface);border:2px solid var(--ink);border-radius:12px;padding:1rem 1.2rem;margin-top:1.4rem}
+.board h3{margin-top:0}
+.brow{display:grid;grid-template-columns:minmax(8rem,1.2fr) 3fr 4rem;gap:.6rem;align-items:center;margin:.35rem 0}
+.meter{height:.8rem;background:var(--line);border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--basil);transition:width .3s}
+.brow .pts{text-align:right;font-weight:700}
+.total{font-family:var(--head);font-size:2.4rem;font-weight:800;margin:.4rem 0 0;line-height:1.1}
+.rank{font-family:var(--head);font-size:1.4rem;font-weight:700;margin:.2rem 0}
+
+.scroll{overflow-x:auto}
+.plan{width:100%;border-collapse:collapse;min-width:34rem}
+.plan th,.plan td{text-align:left;vertical-align:top;padding:.55rem .6rem;border-bottom:1px solid var(--line)}
+.plan th{background:var(--surface)}
+.notes li{margin:.4rem 0}
+
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion: reduce){.shake{animation:none}.bar i,.meter i{transition:none}}
+@media (max-width:36rem){
+  body{font-size:1.05rem}
+  .rule{grid-template-columns:1fr}
+  .matchgrid{gap:.5rem}
+  .card{font-size:.95rem;padding:.45rem .55rem}
+  .brow{grid-template-columns:1fr 3rem}
+  .brow .meter{grid-column:1 / -1;order:3}
+  .score{text-align:left}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>What do you have for breakfast?</h1>
+    <p>Food trends lesson for Restaurant and Food Processing</p>
+  </div>
+  <div class="score" aria-live="polite">
+    <strong id="pts">0</strong> <span>/ <span id="tot"></span> points / poeng</span>
+    <div class="bar"><i id="fill"></i></div>
+  </div>
+</header>
+<nav class="tabs" id="tabs" aria-label="Activities"></nav>
+<main id="main"></main>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+const $=(s,r)=>(r||document).querySelector(s);
+function h(tag,attrs){
+  const e=document.createElement(tag);
+  const kids=Array.prototype.slice.call(arguments,2);
+  Object.keys(attrs||{}).forEach(function(k){
+    const v=attrs[k];
+    if(k==='class')e.className=v;
+    else if(k==='html')e.innerHTML=v;
+    else if(k.indexOf('on')===0)e.addEventListener(k.slice(2),v);
+    else if(v===true)e.setAttribute(k,'');
+    else if(v!==false&&v!=null)e.setAttribute(k,v);
+  });
+  kids.flat(Infinity).forEach(function(c){
+    if(c==null||c===false)return;
+    e.append(c.nodeType?c:document.createTextNode(c));
+  });
+  return e;
+}
+function shuffle(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=b[i];b[i]=b[j];b[j]=t;}return b;}
+function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
+function say(el,text,cls){el.textContent=text;el.className='msg'+(cls?' '+cls:'');}
+const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function reveal(el){try{el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});}catch(e){}}
+
+const canSpeak='speechSynthesis' in window&&typeof SpeechSynthesisUtterance!=='undefined';
+function speak(text){
+  if(!canSpeak)return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-GB';u.rate=0.8;speechSynthesis.speak(u);}catch(e){}
+}
+function speakLines(lines){
+  if(!canSpeak)return;
+  try{
+    speechSynthesis.cancel();
+    lines.forEach(function(l){
+      const u=new SpeechSynthesisUtterance(l[1]);
+      u.lang='en-GB';u.rate=0.85;u.pitch=l[0]==='Mia'?1.2:0.8;
+      speechSynthesis.speak(u);
+    });
+  }catch(e){}
+}
+
+/* ---------- data ---------- */
+const WORDS=[
+ ['apple','eple','🍎','fruit'],['banana','banan','🍌','fruit'],['orange','appelsin','🍊','fruit'],['strawberry','jordbær','🍓','fruit'],['lemon','sitron','🍋','fruit'],
+ ['carrot','gulrot','🥕','veg'],['potato','potet','🥔','veg'],['onion','løk','🧅','veg'],['broccoli','brokkoli','🥦','veg'],['cabbage','kål','🥬','veg'],
+ ['sour','sur','😖','adj'],['sweet','søt','🍬','adj'],['crunchy','sprø','🥨','adj'],['healthy','sunn','💪','adj'],['salty','salt','🧂','adj'],
+ ['breakfast','frokost','🍳','meal'],['lunch','lunsj','🥪','meal'],['dinner','middag','🍝','meal'],['supper','kveldsmat','🍞','meal'],['snack','mellommåltid','🍿','meal']
+];
+const GROUPS=[
+ ['fruit','Fruits','Frukt','🍎'],
+ ['veg','Vegetables','Grønnsaker','🥕'],
+ ['adj','Describing words','Ord som beskriver mat','👅'],
+ ['meal','Meals','Måltider','🍽️']
+];
+const MAX={sort:20,listen:8,spelling:10,hh:10,match:6,reply:5,reading:8,build:6,morning:5,final:8};
+const LABELS={sort:'Sort the words',listen:'Listen',spelling:'Missing letters',hh:'Has or have',match:'Match questions and answers',reply:'Reply to Sam',reading:'Reading',build:'Build sentences',morning:'My morning',final:'Final check'};
+const KEYTAB={sort:'sort',listen:'listen',spelling:'spelling',hh:'hh',match:'dialogue',reply:'dialogue',reading:'reading',build:'build',morning:'morning',final:'final'};
+const TOTAL=Object.keys(MAX).reduce(function(a,k){return a+MAX[k];},0);
+const scores={};Object.keys(MAX).forEach(function(k){scores[k]=0;});
+const done={};
+let studentName='';
+
+const TABS=[
+ {id:'start',label:'Start'},
+ {id:'sort',n:1,label:'Sort',keys:['sort']},
+ {id:'listen',n:2,label:'Listen',keys:['listen']},
+ {id:'spelling',n:3,label:'Missing letters',keys:['spelling']},
+ {id:'hh',n:4,label:'Has or have',keys:['hh']},
+ {id:'dialogue',n:5,label:'Dialogue',keys:['match','reply']},
+ {id:'reading',n:6,label:'Reading',keys:['reading']},
+ {id:'build',n:7,label:'Sentences',keys:['build']},
+ {id:'morning',n:8,label:'My morning',keys:['morning']},
+ {id:'final',n:9,label:'Final check',keys:['final']}
+];
+function tabById(id){return TABS.filter(function(t){return t.id===id;})[0];}
+function tabScore(t){return t.keys.reduce(function(a,k){return a+scores[k];},0);}
+function tabMax(t){return t.keys.reduce(function(a,k){return a+MAX[k];},0);}
+
+/* ---------- shared UI ---------- */
+function ticket(o){
+  return h('div',{class:'ticket'},
+    h('div',{class:'ticket-head'},
+      h('h2',{},o.title),
+      h('p',{class:'no',lang:'nb'},o.titleNo),
+      o.min?h('span',{class:'time'},o.min+' min'):null),
+    h('div',{class:'ticket-body'},
+      h('p',{},h('span',{class:'tag'},'EN'),o.en),
+      h('p',{lang:'nb'},h('span',{class:'tag nb'},'NO'),o.no)));
+}
+function setScore(key,val){scores[key]=val;refreshScore();}
+function refreshScore(){
+  const total=Object.keys(scores).reduce(function(a,k){return a+scores[k];},0);
+  $('#pts').textContent=total;
+  $('#fill').style.width=(100*total/TOTAL)+'%';
+  TABS.forEach(function(t){
+    if(!t.keys)return;
+    const c=$('#tc-'+t.id);
+    if(!c)return;
+    const s=tabScore(t);
+    c.textContent=(s>0||done[t.id])?((done[t.id]?'✓ ':'')+s+'/'+tabMax(t)):'';
+  });
+  renderBoard();
+}
+function remount(id){
+  const t=tabById(id);
+  t.keys.forEach(function(k){scores[k]=0;});
+  done[id]=false;
+  const root=$('#p-'+id);
+  root.innerHTML='';
+  root.classList.remove('show-no');
+  MOUNT[id](root);
+  refreshScore();
+}
+function finish(id,quiet){
+  const t=tabById(id);
+  const root=$('#p-'+id);
+  let box=root.querySelector('.result');
+  if(quiet&&box)return;
+  done[id]=true;
+  refreshScore();
+  if(box)box.remove();
+  const s=tabScore(t),m=tabMax(t);
+  const pct=s/m;
+  const msg=pct>=0.8?'Great work! / Flott jobbet!':pct>=0.5?'Good. Try again to get more points. / Bra. Prøv igjen for å få flere poeng.':'Keep practising. Try again. / Fortsett å øve. Prøv igjen.';
+  const idx=TABS.indexOf(t);
+  const next=TABS[idx+1];
+  const btns=[h('button',{class:'btn ghost',onclick:function(){remount(id);}},'Try again / Prøv igjen')];
+  if(id!=='final'&&next)btns.push(h('button',{class:'btn',onclick:function(){showTab(next.id);}},'Next / Neste'));
+  box=h('div',{class:'result',role:'status'},
+    h('p',{class:'big'},s+' / '+m),
+    h('p',{},s+' of '+m+' points / '+s+' av '+m+' poeng'),
+    h('p',{},msg),
+    h('div',{class:'row'},btns));
+  const slot=root.querySelector('.slot');
+  if(slot)root.insertBefore(box,slot);else root.append(box);
+  if(!quiet)reveal(box);
+}
+
+/* generic multiple choice list */
+function mcList(container,items,key,onAll,opt){
+  opt=opt||{};
+  let right=0,answered=0;
+  items.forEach(function(it){
+    let wrong=false,locked=false;
+    const qText=h('span',{},it.q);
+    const qEl=opt.bubble?h('div',{class:'bubble'},h('b',{},'Sam: '),qText):h('div',{class:'qtext'},qText);
+    const group=h('div',{class:'opts'});
+    const choices=it.fixed?it.o:shuffle(it.o);
+    const btns=choices.map(function(o){
+      const b=h('button',{class:'opt'},o);
+      b.addEventListener('click',function(){
+        if(locked)return;
+        if(o===it.a){
+          locked=true;b.classList.add('ok');
+          btns.forEach(function(x){if(x!==b){x.disabled=true;x.classList.add('dim');}});
+          if(it.q.indexOf('___')>-1)qText.textContent=it.q.replace('___',it.a);
+          answered++;
+          if(!wrong){right++;setScore(key,right);}
+          if(answered===items.length&&onAll)onAll();
+        }else{
+          wrong=true;b.classList.add('bad');b.disabled=true;shake(b);
+        }
+      });
+      return b;
+    });
+    group.append.apply(group,btns);
+    container.append(h('div',{class:'mc'},qEl,group));
+  });
+}
+
+/* ---------- 1. Sort ---------- */
+function mountSort(root){
+  root.append(ticket({
+    title:'1. Sort the words',titleNo:'1. Sorter ordene',min:8,
+    en:'Click a word. Then click the right box. You get 1 point for each word you put in the right box on your first try.',
+    no:'Trykk på et ord. Trykk så på riktig boks. Du får 1 poeng for hvert ord du legger i riktig boks på første forsøk.'}));
+  root.append(h('label',{class:'toggle'},
+    h('input',{type:'checkbox',onchange:function(e){root.classList.toggle('show-no',e.target.checked);}}),
+    'Show Norwegian / Vis norsk'));
+  const msg=h('p',{class:'msg',role:'status'});
+  let sel=null,score=0,placed=0;
+  const missed={};
+  const bank=h('div',{class:'bank'});
+  shuffle(WORDS).forEach(function(w){
+    const chip=h('button',{class:'chip'},h('span',{class:'emo'},w[2]),h('span',{class:'w'},w[0]),h('span',{class:'wno'},w[1]));
+    chip.addEventListener('click',function(){
+      if(chip.classList.contains('placed'))return;
+      if(sel&&sel.el===chip){chip.classList.remove('sel');sel=null;return;}
+      if(sel)sel.el.classList.remove('sel');
+      chip.classList.add('sel');sel={w:w,el:chip};
+      say(msg,'Now click a box. / Trykk nå på en boks.');
+    });
+    bank.append(chip);
+  });
+  const grid=h('div',{class:'buckets'});
+  GROUPS.forEach(function(g){
+    const list=h('div',{class:'list'});
+    const b=h('div',{class:'bucket','data-g':g[0],role:'button',tabindex:'0','aria-label':g[1]},
+      h('h4',{},g[3]+' '+g[1],h('span',{class:'no',lang:'nb'},g[2])),list);
+    function drop(){
+      if(!sel){say(msg,'Click a word first. / Trykk på et ord først.','bad');return;}
+      const w=sel.w,chip=sel.el;
+      if(w[3]===g[0]){
+        chip.classList.remove('sel');chip.classList.add('placed');chip.tabIndex=-1;chip.setAttribute('aria-disabled','true');
+        list.append(chip);
+        if(!missed[w[0]]){score++;setScore('sort',score);}
+        placed++;sel=null;
+        say(msg,'Correct! / Riktig!','good');
+        if(placed===WORDS.length)finish('sort');
+      }else{
+        missed[w[0]]=true;shake(chip);
+        say(msg,'Not this box. Try another. / Ikke denne boksen. Prøv en annen.','bad');
+      }
+    }
+    b.addEventListener('click',drop);
+    b.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();drop();}});
+    grid.append(b);
+  });
+  root.append(bank,msg,grid);
+}
+
+/* ---------- 2. Listen ---------- */
+function mountListen(root){
+  root.append(ticket({
+    title:'2. Listen and choose',titleNo:'2. Lytt og velg',min:5,
+    en:'Press the speaker button. Listen to the word. Click the word you hear. You get 1 point if your first answer is right.',
+    no:'Trykk på høyttaleren. Lytt til ordet. Trykk på ordet du hører. Du får 1 poeng hvis første svar er riktig.'}));
+  const area=h('div',{class:'listen'});
+  root.append(area);
+  const ROUND=['apple','carrot','strawberry','sour','crunchy','breakfast','supper','onion'].map(function(x){return WORDS.filter(function(w){return w[0]===x;})[0];});
+  let i=0,score=0;
+  function render(){
+    area.innerHTML='';
+    const w=ROUND[i];
+    let wrong=false,locked=false;
+    const msg=h('p',{class:'msg',role:'status'});
+    area.append(h('p',{class:'sub'},'Word '+(i+1)+' of '+ROUND.length+' / Ord '+(i+1)+' av '+ROUND.length));
+    if(canSpeak){
+      area.append(h('button',{class:'btn speaker',onclick:function(){speak(w[0]);}},'🔊 Listen / Lytt'));
+    }else{
+      area.append(h('div',{class:'big-emo'},w[2]),h('p',{class:'sub'},'Your device has no sound. Look at the picture. / Enheten din har ikke lyd. Se på bildet.'));
+    }
+    const opts=shuffle([w].concat(shuffle(WORDS.filter(function(x){return x!==w;})).slice(0,3)));
+    const group=h('div',{class:'opts'});
+    const btns=opts.map(function(o){
+      const b=h('button',{class:'opt'},o[0]);
+      b.addEventListener('click',function(){
+        if(locked)return;
+        if(o===w){
+          locked=true;b.classList.add('ok');
+          btns.forEach(function(x){if(x!==b){x.disabled=true;x.classList.add('dim');}});
+          if(!wrong){score++;setScore('listen',score);}
+          say(msg,w[2]+' '+w[0]+' = '+w[1]+'. Say the word out loud! / Si ordet høyt!','good');
+          if(i===ROUND.length-1){finish('listen');}
+          else{area.append(h('div',{class:'row'},h('button',{class:'btn',onclick:function(){i++;render();}},'Next word / Neste ord')));}
+        }else{
+          wrong=true;b.classList.add('bad');b.disabled=true;shake(b);
+          say(msg,'Not this word. Listen again. / Ikke dette ordet. Lytt igjen.','bad');
+        }
+      });
+      return b;
+    });
+    group.append.apply(group,btns);
+    area.append(group,msg);
+  }
+  render();
+}
+
+/* ---------- 3. Missing letters ---------- */
+const SPELL=[
+ ['breakfast','frokost','🍳','b_eakf_st'],['banana','banan','🍌','b_n_na'],['strawberry','jordbær','🍓','str_wb_rry'],
+ ['carrot','gulrot','🥕','c_rr_t'],['broccoli','brokkoli','🥦','br_cc_li'],['healthy','sunn','💪','h_alt_y'],
+ ['crunchy','sprø','🥨','cr_nch_'],['supper','kveldsmat','🍞','s_pp_r'],['potato','potet','🥔','p_t_to'],['lemon','sitron','🍋','l_m_n']
+];
+function mountSpelling(root){
+  root.append(ticket({
+    title:'3. Add the missing letters',titleNo:'3. Skriv inn bokstavene som mangler',min:10,
+    en:'Look at the picture and read the Norwegian word. Type the missing letters, one letter in each box. You get 1 point if all letters are right on your first try. Red boxes mean a letter is wrong.',
+    no:'Se på bildet og les det norske ordet. Skriv inn bokstavene som mangler, én bokstav i hver rute. Du får 1 poeng hvis alle bokstavene er riktige på første forsøk. Røde ruter betyr at en bokstav er feil.'}));
+  let score=0,count=0;
+  SPELL.forEach(function(it){
+    const word=it[0],pat=it[3];
+    let wrong=false,locked=false;
+    const inputs=[];
+    const letters=h('div',{class:'letters'});
+    const msg=h('p',{class:'msg',role:'status'});
+    const row=h('div',{class:'spellrow','data-word':word});
+    pat.split('').forEach(function(ch,i){
+      if(ch==='_'){
+        const inp=h('input',{class:'gap',type:'text',maxlength:'2',autocomplete:'off',autocapitalize:'off',spellcheck:'false','aria-label':'Missing letter in '+it[1],'data-a':word.charAt(i)});
+        inp.addEventListener('input',function(){
+          if(locked)return;
+          let v=inp.value.slice(-1).toLowerCase();
+          if(!/[a-z]/.test(v))v='';
+          inp.value=v;
+          inp.classList.remove('bad');
+          if(v){
+            const nxt=inputs.filter(function(x,k){return k>inputs.indexOf(inp)&&!x.value;})[0];
+            if(nxt)nxt.focus();
+          }
+          evaluate();
+        });
+        inputs.push(inp);letters.append(inp);
+      }else{
+        letters.append(h('span',{class:'letter'},ch));
+      }
+    });
+    function evaluate(){
+      if(locked)return;
+      if(inputs.some(function(x){return !x.value;}))return;
+      const bad=inputs.filter(function(x){return x.value!==x.dataset.a;});
+      if(!bad.length){
+        locked=true;
+        inputs.forEach(function(x){x.classList.remove('bad');x.classList.add('ok');x.disabled=true;});
+        say(msg,'Correct! '+word+' = '+it[1]+'. / Riktig!','good');
+        if(!wrong){score++;setScore('spelling',score);}
+        count++;
+        if(count===SPELL.length)finish('spelling');
+      }else{
+        wrong=true;
+        bad.forEach(function(x){x.classList.add('bad');});
+        shake(letters);
+        say(msg,'Check the red boxes. / Sjekk de røde rutene.','bad');
+      }
+    }
+    row.append(h('span',{class:'pic','aria-hidden':'true'},it[2]),h('span',{class:'hint',lang:'nb'},it[1]),letters);
+    if(canSpeak)row.append(h('button',{class:'btn ghost',onclick:function(){speak(word);}},'🔊'));
+    row.append(msg);
+    root.append(row);
+  });
+}
+
+/* ---------- 4. Has or have ---------- */
+const STAND=[
+ ['Stand up if you have breakfast every day.','Reis deg hvis du spiser frokost hver dag.'],
+ ['Stand up if you like sweet food.','Reis deg hvis du liker søt mat.'],
+ ['Stand up if you dislike broccoli.','Reis deg hvis du ikke liker brokkoli.'],
+ ['Stand up if you have a banana in your bag.','Reis deg hvis du har en banan i sekken.'],
+ ['Stand up if you like crunchy food.','Reis deg hvis du liker sprø mat.'],
+ ['Look at your partner. Stand up if your partner has a pen.','Se på partneren din. Reis deg hvis partneren din har en penn.'],
+ ['Stand up if you have lunch at school.','Reis deg hvis du spiser lunsj på skolen.'],
+ ['Stand up if you dislike sour food.','Reis deg hvis du ikke liker sur mat.']
+];
+const HH=[
+ {q:'I ___ an apple for breakfast.',o:['has','have'],a:'have',fixed:true},
+ {q:'She ___ a banana.',o:['has','have'],a:'has',fixed:true},
+ {q:'We ___ lunch at twelve.',o:['has','have'],a:'have',fixed:true},
+ {q:'He ___ cereal in the morning.',o:['has','have'],a:'has',fixed:true},
+ {q:'They ___ fish for dinner.',o:['has','have'],a:'have',fixed:true},
+ {q:'My friend ___ coffee.',o:['has','have'],a:'has',fixed:true},
+ {q:'You ___ a big breakfast.',o:['has','have'],a:'have',fixed:true},
+ {q:'The soup ___ a lot of salt.',o:['has','have'],a:'has',fixed:true},
+ {q:'Mia and Omar ___ sandwiches.',o:['has','have'],a:'have',fixed:true},
+ {q:'The cook ___ a red apron.',o:['has','have'],a:'has',fixed:true}
+];
+function mountHH(root){
+  root.append(ticket({
+    title:'4. Has or have',titleNo:'4. Has eller have',min:15,
+    en:'First stand up and play. Then read the rule. Then choose has or have in each sentence. You get 1 point if your first answer is right.',
+    no:'Først reiser du deg og leker. Les så regelen. Velg så has eller have i hver setning. Du får 1 poeng hvis første svar er riktig.'}));
+
+  let si=0;
+  const prompt=h('p',{class:'prompt'},STAND[0][0]);
+  const promptNo=h('p',{class:'no',lang:'nb'},STAND[0][1]);
+  root.append(h('div',{class:'stand'},
+    h('p',{class:'sub'},'Warm up: stand up game / Oppvarming: reis deg opp'),
+    prompt,promptNo,
+    h('div',{class:'row'},h('button',{class:'btn ghost',onclick:function(){si=(si+1)%STAND.length;prompt.textContent=STAND[si][0];promptNo.textContent=STAND[si][1];}},'Next sentence / Neste setning'))));
+
+  root.append(h('h3',{},'The rule / Regelen'));
+  root.append(h('div',{class:'rule'},
+    h('div',{class:'have'},
+      h('p',{class:'word'},'have'),
+      h('ul',{},h('li',{},'I have / Jeg har'),h('li',{},'you have / du har'),h('li',{},'we have / vi har'),h('li',{},'they have / de har'))),
+    h('div',{class:'has'},
+      h('p',{class:'word'},'has'),
+      h('ul',{},h('li',{},'he has / han har'),h('li',{},'she has / hun har'),h('li',{},'it has / den eller det har'),h('li',{},'my friend has / vennen min har')))));
+  root.append(h('div',{class:'ex'},
+    h('p',{},'🍎 I have an apple. We have lunch at one.'),
+    h('p',{},'🍌 She has a banana. He has breakfast at home.'),
+    h('p',{class:'no',lang:'nb'},'Bruk has etter he, she og it. Bruk have etter I, you, we og they. Én person eller ting (en venn, en kokk, suppen) er som he, she eller it.')));
+
+  root.append(h('h3',{},'Practice / Øvelse'));
+  const box=h('div',{});
+  root.append(box);
+  mcList(box,HH,'hh',function(){finish('hh');});
+  root.append(h('div',{class:'ex'},
+    h('p',{},h('b',{},'Pair talk / Snakk sammen: '),'Say 3 sentences to your partner. Use have and has.'),
+    h('p',{},'I have ... My partner has ... We have ...'),
+    h('p',{class:'no',lang:'nb'},'Si tre setninger til partneren din. Bruk have og has.')));
+}
+
+/* ---------- 4. Dialogue ---------- */
+const DIALOGUE=[
+ ['Mia','Hi Omar! What do you have for breakfast?'],
+ ['Omar','I have bread and cheese. And you?'],
+ ['Mia','I have an apple and yoghurt.'],
+ ['Omar','What is your favourite fruit?'],
+ ['Mia','My favourite fruit is banana. It is sweet.'],
+ ['Mia','Do you like crunchy carrots?'],
+ ['Omar','Yes, I do. But I dislike broccoli.'],
+ ['Mia','Does your sister have breakfast at home?'],
+ ['Omar','Yes, she does. She has porridge.'],
+ ['Mia','When do you have dinner?'],
+ ['Omar','I have dinner at six.']
+];
+const PAIRS=[
+ ['What do you have for breakfast?','I have bread and cheese.'],
+ ['When do you have dinner?','I have dinner at six.'],
+ ['Is a banana sweet?','Yes, it is.'],
+ ['Does your sister have breakfast at home?','Yes, she does.'],
+ ['Do you like crunchy carrots?','Yes, I do.'],
+ ['What is your favourite fruit?','My favourite fruit is banana.']
+];
+const REPLY=[
+ {q:'What do you like for breakfast?',o:['I like eggs and toast.','Yes, I do.','I am fine, thanks.'],a:'I like eggs and toast.'},
+ {q:'Do you like lemons?',o:["No, I don't. They are sour.",'Yes, I am.','At seven o\'clock.'],a:"No, I don't. They are sour."},
+ {q:'Does she have breakfast at school?',o:['Yes, she does.','Yes, she have.','Yes, I do.'],a:'Yes, she does.'},
+ {q:'What do you have for lunch?',o:['I have a sandwich.','I has a sandwich.','I like Monday.'],a:'I have a sandwich.'},
+ {q:'Is an apple healthy?',o:['Yes, it is.','Yes, I do.','No, I have.'],a:'Yes, it is.'}
+];
+function mountDialogue(root){
+  root.append(ticket({
+    title:'5. Dialogue',titleNo:'5. Dialog',min:12,
+    en:'Read the dialogue with a partner. Then match each question with its answer. Then choose the best reply to Sam. You get 1 point for each right answer on your first try.',
+    no:'Les dialogen sammen med en partner. Koble så hvert spørsmål med riktig svar. Velg så det beste svaret til Sam. Du får 1 poeng for hvert riktige svar på første forsøk.'}));
+  let matchDone=false,replyDone=false;
+  function check(){if(matchDone&&replyDone)finish('dialogue');}
+
+  root.append(h('h3',{},'A. Read and listen / Les og lytt'));
+  const dlg=h('div',{class:'dlg'});
+  DIALOGUE.forEach(function(l){
+    dlg.append(h('div',{class:'line '+l[0].toLowerCase()},h('b',{},l[0]),h('span',{class:'talk'},l[1])));
+  });
+  root.append(dlg);
+  if(canSpeak)root.append(h('div',{class:'row'},h('button',{class:'btn ghost',onclick:function(){speakLines(DIALOGUE);}},'🔊 Listen to the dialogue / Lytt til dialogen')));
+
+  root.append(h('h3',{},'B. Match questions and answers / Koble spørsmål og svar'));
+  root.append(h('p',{class:'sub'},'Click a question. Then click its answer. / Trykk på et spørsmål. Trykk så på svaret.'));
+  const qs=PAIRS.map(function(p,i){return {i:i,t:p[0]};});
+  const as=shuffle(PAIRS.map(function(p,i){return {i:i,t:p[1]};}));
+  let sel=null,matched=0,score=0;
+  const wrongQ={};
+  const msg=h('p',{class:'msg',role:'status'});
+  function mk(o,side){
+    const b=h('button',{class:'card'},o.t);
+    o.el=b;
+    b.addEventListener('click',function(){pick(b,o,side);});
+    return b;
+  }
+  function pick(b,o,side){
+    if(b.disabled)return;
+    if(sel&&sel.side===side){sel.el.classList.remove('sel');const same=sel.o===o;sel=null;if(same)return;}
+    if(!sel){b.classList.add('sel');sel={o:o,el:b,side:side};return;}
+    const qo=side==='a'?sel.o:o;
+    const ao=side==='a'?o:sel.o;
+    if(qo.i===ao.i){
+      [qo.el,ao.el].forEach(function(x){x.classList.remove('sel');x.classList.add('ok');x.disabled=true;});
+      matched++;
+      if(!wrongQ[qo.i]){score++;setScore('match',score);}
+      sel=null;
+      say(msg,'Correct! / Riktig!','good');
+      if(matched===PAIRS.length){matchDone=true;check();}
+    }else{
+      wrongQ[qo.i]=true;
+      shake(b);shake(sel.el);
+      sel.el.classList.remove('sel');sel=null;
+      say(msg,'These do not match. Try again. / Disse passer ikke sammen. Prøv igjen.','bad');
+    }
+  }
+  const colQ=h('div',{class:'col'},qs.map(function(o){return mk(o,'q');}));
+  const colA=h('div',{class:'col'},as.map(function(o){return mk(o,'a');}));
+  root.append(h('div',{class:'matchgrid'},colQ,colA),msg);
+
+  root.append(h('h3',{},'C. Reply to Sam / Svar Sam'));
+  root.append(h('p',{class:'sub'},'Choose the best answer. / Velg det beste svaret.'));
+  const rbox=h('div',{});
+  root.append(rbox);
+  mcList(rbox,REPLY,'reply',function(){replyDone=true;check();},{bubble:true});
+}
+
+/* ---------- 5. Reading ---------- */
+const TEENS=[
+ {name:'Emma',age:15,city:'London',c:'--tomato',lines:['Hi! I am Emma. I am 15. I live in London.','In the morning I have porridge and a banana.','I have lunch at school. I have a sandwich.','For dinner we have chicken and potatoes.','My brother has cereal.','I like crunchy apples. I dislike onions.']},
+ {name:'Jack',age:16,city:'Manchester',c:'--basil',lines:['Hello! My name is Jack. I am 16. I live in Manchester.','I have toast and eggs for breakfast.','I have dinner at six. My dad makes pasta.','I like salty chips, but they are not healthy.','I dislike broccoli.']},
+ {name:'Priya',age:15,city:'Birmingham',c:'--lemon',lines:['Hi, I am Priya. I am 15. I live in Birmingham.','I have yoghurt and strawberries for breakfast.','For lunch I have rice and vegetables.','At supper we have soup.','I like sweet strawberries. I dislike sour lemons.']},
+ {name:'Tom',age:16,city:'Liverpool',c:'--pan',lines:['Hi! I am Tom. I am 16. I live in Liverpool.','In the morning I have cereal and a glass of milk.','My sister has a cheese sandwich.','At school I have soup for lunch. After school I have an orange.','I like crunchy carrots. I dislike cabbage.']}
+];
+const HELP=[['porridge','grøt'],['toast','ristet brød'],['eggs','egg'],['cereal','frokostblanding'],['chicken','kylling'],['pasta','pasta'],['soup','suppe'],['rice','ris'],['yoghurt','yoghurt'],['vegetables','grønnsaker'],['cheese','ost'],['a glass of milk','et glass melk'],['live','bo'],['dad / brother / sister','pappa / bror / søster']];
+const READQ=[
+ {q:'Who lives in Liverpool?',o:['Tom','Jack','Emma'],a:'Tom'},
+ {q:'What does Emma have for breakfast?',o:['porridge and a banana','toast and eggs','yoghurt and strawberries'],a:'porridge and a banana'},
+ {q:'Who has dinner at six?',o:['Jack','Priya','Emma'],a:'Jack'},
+ {q:'What does Tom\'s sister have?',o:['a cheese sandwich','cereal','soup'],a:'a cheese sandwich'},
+ {q:'Who dislikes sour lemons?',o:['Priya','Emma','Tom'],a:'Priya'},
+ {q:'What does Priya have for supper?',o:['soup','rice','pasta'],a:'soup'},
+ {q:'Who likes crunchy carrots?',o:['Tom','Jack','Priya'],a:'Tom'},
+ {q:'Emma\'s brother ___ cereal in the morning.',o:['has','have','haves'],a:'has'}
+];
+function mountReading(root){
+  root.append(ticket({
+    title:'6. Read about four teenagers',titleNo:'6. Les om fire tenåringer',min:11,
+    en:'Read about Emma, Jack, Priya and Tom. They live in England. They say what they eat every day. Then answer the quiz. You can read the texts again. You get 1 point if your first answer is right.',
+    no:'Les om Emma, Jack, Priya og Tom. De bor i England. De forteller hva de spiser hver dag. Svar så på quizen. Du kan lese tekstene igjen. Du får 1 poeng hvis første svar er riktig.'}));
+  root.append(h('details',{class:'help'},
+    h('summary',{},'Word help / Ordhjelp'),
+    h('div',{class:'helpgrid'},HELP.map(function(w){return h('span',{},w[0]+' = '+w[1]);}))));
+  const grid=h('div',{class:'teens'});
+  TEENS.forEach(function(t){
+    const card=h('div',{class:'teen'},
+      h('div',{class:'teen-head'},
+        h('span',{class:'avatar',style:'border-color:var('+t.c+')','aria-hidden':'true'},t.name.charAt(0)),
+        h('div',{},h('h4',{},t.name),h('p',{class:'sub'},t.age+' years old, '+t.city))),
+      t.lines.map(function(l){return h('p',{class:'line1'},l);}));
+    if(canSpeak)card.append(h('div',{class:'row'},h('button',{class:'btn ghost',onclick:function(){speak(t.lines.join(' '));}},'🔊 Listen / Lytt')));
+    grid.append(card);
+  });
+  root.append(grid);
+  root.append(h('h3',{},'Quiz / Quiz'));
+  root.append(h('p',{class:'sub'},'Choose the right answer. / Velg riktig svar.'));
+  const box=h('div',{});
+  root.append(box);
+  mcList(box,READQ,'reading',function(){finish('reading');});
+}
+
+/* ---------- 6. Build sentences ---------- */
+const SENT=[
+ ['In the morning I have breakfast.','Om morgenen spiser jeg frokost.'],
+ ['I like sweet strawberries.','Jeg liker søte jordbær.'],
+ ['I dislike sour lemons.','Jeg liker ikke sure sitroner.'],
+ ['She has an apple for lunch.','Hun har et eple til lunsj.'],
+ ['We have fish for dinner.','Vi spiser fisk til middag.'],
+ ['They have supper at eight.','De spiser kveldsmat klokka åtte.']
+];
+function mountBuild(root){
+  root.append(ticket({
+    title:'7. Build the sentence',titleNo:'7. Lag setningen',min:5,
+    en:'Read the Norwegian sentence. Click the English words in the right order. Press Check. You get 1 point if your first check is right.',
+    no:'Les den norske setningen. Trykk på de engelske ordene i riktig rekkefølge. Trykk Sjekk. Du får 1 poeng hvis første sjekk er riktig.'}));
+  let right=0,count=0;
+  SENT.forEach(function(s){
+    const en=s[0],no=s[1];
+    const toks=shuffle(en.split(' ').map(function(t,k){return {t:t,k:k};}));
+    let chosen=[],wrong=false,locked=false;
+    const ans=h('div',{class:'ansline','aria-label':'Your sentence'});
+    const bank=h('div',{class:'bank'});
+    const msg=h('p',{class:'msg',role:'status'});
+    function draw(){
+      ans.innerHTML='';bank.innerHTML='';
+      chosen.forEach(function(o){
+        ans.append(h('button',{class:'chip small'+(locked?' ok':''),disabled:locked,onclick:function(){chosen=chosen.filter(function(x){return x!==o;});draw();}},o.t));
+      });
+      toks.filter(function(o){return chosen.indexOf(o)<0;}).forEach(function(o){
+        bank.append(h('button',{class:'chip small',disabled:locked,onclick:function(){chosen.push(o);draw();}},o.t));
+      });
+    }
+    const check=h('button',{class:'btn',onclick:function(){
+      if(locked)return;
+      if(chosen.length<toks.length){say(msg,'Use all the words. / Bruk alle ordene.','bad');return;}
+      if(chosen.map(function(o){return o.t;}).join(' ')===en){
+        locked=true;say(msg,'Correct! / Riktig!','good');
+        if(!wrong){right++;setScore('build',right);}
+        draw();count++;
+        if(count===SENT.length)finish('build');
+      }else{
+        wrong=true;shake(ans);say(msg,'Not yet. Try again. / Ikke helt ennå. Prøv igjen.','bad');
+      }
+    }},'Check / Sjekk');
+    const clear=h('button',{class:'btn ghost',onclick:function(){if(locked)return;chosen=[];draw();}},'Clear / Tøm');
+    draw();
+    root.append(h('div',{class:'build'},
+      h('p',{class:'nbprompt',lang:'nb'},'🇳🇴 '+no),
+      ans,bank,
+      h('div',{class:'row'},check,clear),msg));
+  });
+}
+
+/* ---------- 7. My morning ---------- */
+const HAVE_OPTS=[['bread and cheese','brød og ost'],['eggs','egg'],['porridge','grøt'],['cereal','frokostblanding'],['yoghurt','yoghurt'],['an apple','et eple'],['a banana','en banan'],['a sandwich','en smørbrød'],['coffee','kaffe'],['tea','te'],['a glass of milk','et glass melk'],['juice','juice']];
+const LIKE_OPTS=[['sweet strawberries','søte jordbær'],['crunchy carrots','sprø gulrøtter'],['sour lemons','sure sitroner'],['salty chips','salt potetgull'],['healthy broccoli','sunn brokkoli'],['sweet bananas','søte bananer'],['crunchy apples','sprø epler'],['onions','løk'],['cabbage','kål'],['potatoes','poteter']];
+const MEAL_OPTS=[['breakfast','frokost'],['lunch','lunsj'],['dinner','middag'],['supper','kveldsmat']];
+function mountMorning(root){
+  root.append(ticket({
+    title:'8. My morning food',titleNo:'8. Maten min om morgenen',min:13,
+    en:'Choose from the lists. Your text appears below. Then write two more sentences. Last, talk to your partner. You get 1 point for each part you finish.',
+    no:'Velg fra listene. Teksten din vises under. Skriv så to setninger til. Til slutt snakker du med partneren din. Du får 1 poeng for hver del du fullfører.'}));
+  const st={a:'',b:'',c:'',d:'',t:''};
+  function mkSel(key,label,opts){
+    const s=h('select',{'aria-label':label,onchange:function(e){st[key]=e.target.value;update();}},
+      h('option',{value:''},'Choose / Velg'),
+      opts.map(function(o){return h('option',{value:o[0]},o[0]+' / '+o[1]);}));
+    return h('label',{class:'field'},h('span',{},label),s);
+  }
+  root.append(h('div',{class:'fields'},
+    mkSel('a','In the morning I have ... / Om morgenen spiser jeg ...',HAVE_OPTS),
+    mkSel('b','I like ... / Jeg liker ...',LIKE_OPTS),
+    mkSel('c','I dislike ... / Jeg liker ikke ...',LIKE_OPTS),
+    mkSel('d','My favourite meal is ... / Favorittmåltidet mitt er ...',MEAL_OPTS)));
+  const menu=h('div',{class:'menu','aria-live':'polite'});
+  const warn=h('p',{class:'msg bad'});
+  root.append(h('h3',{},'My text / Teksten min'),menu,warn);
+  if(canSpeak)root.append(h('div',{class:'row'},h('button',{class:'btn ghost',onclick:function(){speak(lines().join(' ')+' '+st.t);}},'🔊 Read my text aloud / Les teksten min høyt')));
+  const ta=h('textarea',{'aria-label':'Write two more sentences',placeholder:'My partner has ... / We have ...',oninput:function(e){st.t=e.target.value;update();}});
+  root.append(h('label',{class:'field'},h('span',{},'Write two more sentences. Use have or has. / Skriv to setninger til. Bruk have eller has.'),ta));
+  const wc=h('p',{class:'sub'});
+  root.append(wc);
+
+  root.append(h('h3',{},'Talk to your partner / Snakk med partneren din'));
+  root.append(h('p',{class:'sub'},'Ask your partner. Tick each question when you have the answer. / Spør partneren din. Huk av når du har svaret.'));
+  ['What do you have in the morning?','Do you like sweet food?','Does your partner have lunch at school? (Look at your partner and say: My partner has ...)'].forEach(function(q){
+    root.append(h('label',{class:'check'},h('input',{type:'checkbox'}),h('span',{},q)));
+  });
+  root.append(h('div',{class:'ex'},
+    h('p',{},'Tell your partner: I have ... I like ... I dislike ...'),
+    h('p',{class:'no',lang:'nb'},'Fortell partneren din: Jeg spiser ... Jeg liker ... Jeg liker ikke ...')));
+
+  function lines(){
+    return ['In the morning I have '+(st.a||'___')+'.','I like '+(st.b||'___')+'.','I dislike '+(st.c||'___')+'.','My favourite meal is '+(st.d||'___')+'.'];
+  }
+  function update(){
+    menu.innerHTML='';
+    lines().forEach(function(l){menu.append(h('p',{},l));});
+    if(st.t.trim())menu.append(h('p',{},st.t.trim()));
+    let s=0;
+    if(st.a)s++;
+    if(st.b)s++;
+    if(st.c&&st.c!==st.b)s++;
+    if(st.d)s++;
+    const words=st.t.trim().split(/\s+/).filter(Boolean).length;
+    if(words>=8)s++;
+    warn.textContent=(st.c&&st.c===st.b)?'Choose a different food for like and dislike. / Velg ulik mat for liker og liker ikke.':'';
+    wc.textContent=words+' words / '+words+' ord (8 words needed for the point / 8 ord trengs for poenget)';
+    setScore('morning',s);
+    if(s===5){finish('morning',true);}
+    else{const r=root.querySelector('.result');if(r)r.remove();done.morning=false;refreshScore();}
+  }
+  update();
+}
+
+/* ---------- 8. Final check ---------- */
+const FINAL=[
+ {q:'Which word is a fruit?',o:['carrot','strawberry','onion'],a:'strawberry'},
+ {q:'Which word is a meal?',o:['supper','sour','apple'],a:'supper'},
+ {q:'She ___ a banana.',o:['have','has','having'],a:'has'},
+ {q:'We ___ lunch at twelve.',o:['have','has','haves'],a:'have'},
+ {q:'Do you like carrots?',o:['Yes, I do.','Yes, I have.','Yes, she does.'],a:'Yes, I do.'},
+ {q:'Lemons are ___.',o:['sour','sweet','supper'],a:'sour'},
+ {q:'Which sentence is right?',o:['In the morning I have breakfast.','In the morning I has breakfast.','In the morning have I breakfast.'],a:'In the morning I have breakfast.'},
+ {q:'I ___ broccoli. I do not like it.',o:['dislike','like','have'],a:'dislike'}
+];
+function mountFinal(root){
+  root.append(ticket({
+    title:'9. Final check',titleNo:'9. Sluttsjekk',min:6,
+    en:'Choose the right answer. You get 1 point if your first answer is right. Then look at your scoreboard.',
+    no:'Velg riktig svar. Du får 1 poeng hvis første svar er riktig. Se så på poengtavlen din.'}));
+  const q=h('div',{});
+  root.append(q);
+  mcList(q,FINAL,'final',function(){finish('final');});
+  root.append(h('div',{class:'slot'},h('div',{class:'board',id:'board'})));
+  renderBoard();
+}
+function rankFor(p){
+  if(p>=0.85)return 'Head chef / Sjefskokk 👨‍🍳';
+  if(p>=0.65)return 'Cook / Kokk 🍳';
+  return 'Kitchen helper / Kjøkkenhjelp 🥄';
+}
+function renderBoard(){
+  const b=$('#board');
+  if(!b)return;
+  b.innerHTML='';
+  const total=Object.keys(scores).reduce(function(a,k){return a+scores[k];},0);
+  b.append(h('h3',{},(studentName?studentName+': ':'')+'Scoreboard / Poengtavle'));
+  Object.keys(MAX).forEach(function(k){
+    b.append(h('div',{class:'brow'},
+      h('span',{},LABELS[k]),
+      h('div',{class:'meter'},h('i',{style:'width:'+(100*scores[k]/MAX[k])+'%'})),
+      h('span',{class:'pts'},scores[k]+'/'+MAX[k])));
+  });
+  b.append(h('p',{class:'total'},total+' / '+TOTAL),h('p',{class:'rank'},rankFor(total/TOTAL)));
+  if(total>0&&total<TOTAL){
+    let worst=null,wr=2;
+    Object.keys(MAX).forEach(function(k){const r=scores[k]/MAX[k];if(r<wr){wr=r;worst=k;}});
+    if(worst&&wr<1){
+      b.append(h('p',{},'Try this activity again: '+LABELS[worst]+' / Prøv denne aktiviteten igjen: '+LABELS[worst]));
+      b.append(h('div',{class:'row'},h('button',{class:'btn ghost',onclick:function(){showTab(KEYTAB[worst]);}},'Go there / Gå dit')));
+    }
+  }
+  b.append(h('div',{class:'ex'},
+    h('p',{},'📸 Take a photo of your scoreboard and share it with Barbara on Teams.'),
+    h('p',{class:'no',lang:'nb'},'Ta et bilde av poengtavlen og del det med Barbara på Teams.')));
+}
+
+/* ---------- Start and teacher tabs ---------- */
+function mountStart(root){
+  root.append(ticket({
+    title:'Welcome to the kitchen',titleNo:'Velkommen til kjøkkenet',min:5,
+    en:'Today you practise food words, spelling, has and have, questions and answers, and reading. At the end you can say what you have, like and dislike in the morning.',
+    no:'I dag øver du på matord, staving, has og have, spørsmål og svar, og lesing. Til slutt kan du si hva du spiser, liker og ikke liker om morgenen.'}));
+  root.append(h('label',{class:'field'},h('span',{},'Your name / Navnet ditt'),
+    h('input',{type:'text',autocomplete:'off',style:'width:100%;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:.5rem .7rem',oninput:function(e){studentName=e.target.value.trim();renderBoard();}})));
+  root.append(h('h3',{},'Today I can ... / I dag kan jeg ...'));
+  root.append(h('div',{class:'ex'},
+    h('p',{},'✔ say the names of fruits, vegetables and meals'),
+    h('p',{class:'no',lang:'nb'},'si navn på frukt, grønnsaker og måltider'),
+    h('p',{},'✔ spell food words'),
+    h('p',{class:'no',lang:'nb'},'stave matord'),
+    h('p',{},'✔ use has and have'),
+    h('p',{class:'no',lang:'nb'},'bruke has og have'),
+    h('p',{},'✔ ask and answer questions about food'),
+    h('p',{class:'no',lang:'nb'},'stille og svare på spørsmål om mat'),
+    h('p',{},'✔ say what I have, like and dislike in the morning'),
+    h('p',{class:'no',lang:'nb'},'si hva jeg spiser, liker og ikke liker om morgenen')));
+  root.append(h('h3',{},'Points / Poeng'));
+  root.append(h('div',{class:'ex'},
+    h('p',{},'You get 1 point when your first answer is right. If your first answer is wrong, you can try again, but you do not get the point. You can press Try again at the end of each activity.'),
+    h('p',{class:'no',lang:'nb'},'Du får 1 poeng når det første svaret ditt er riktig. Hvis første svar er feil, kan du prøve igjen, men du får ikke poenget. Du kan trykke Prøv igjen etter hver aktivitet.'),
+    h('p',{},'Total: '+TOTAL+' points / poeng.')));
+  root.append(h('div',{class:'row'},h('button',{class:'btn',onclick:function(){showTab('sort');}},'Start / Start')));
+}
+const MOUNT={start:mountStart,sort:mountSort,listen:mountListen,spelling:mountSpelling,hh:mountHH,dialogue:mountDialogue,reading:mountReading,build:mountBuild,morning:mountMorning,final:mountFinal};
+
+/* ---------- navigation ---------- */
+function showTab(id){
+  TABS.forEach(function(t){
+    $('#p-'+t.id).hidden=(t.id!==id);
+    const b=$('#tab-'+t.id);
+    if(t.id===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+  });
+  if(canSpeak){try{speechSynthesis.cancel();}catch(e){}}
+  window.scrollTo(0,0);
+  const b=$('#tab-'+id);
+  if(b&&b.scrollIntoView){try{b.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}}
+}
+
+function init(){
+  $('#tot').textContent=TOTAL;
+  const nav=$('#tabs'),main=$('#main');
+  TABS.forEach(function(t){
+    nav.append(h('button',{class:'tab',id:'tab-'+t.id,onclick:function(){showTab(t.id);}},
+      t.n?h('span',{class:'n'},String(t.n)):null,
+      h('span',{},t.label),
+      t.keys?h('span',{class:'tchip',id:'tc-'+t.id}):null));
+    main.append(h('section',{class:'panel',id:'p-'+t.id,hidden:true}));
+  });
+  TABS.forEach(function(t){MOUNT[t.id]($('#p-'+t.id));});
+  refreshScore();
+  showTab('start');
+}
+init();
+})();
+</script>
+</body>
+</html>
